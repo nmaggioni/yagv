@@ -29,7 +29,7 @@ class GcodeParser:
     def parseLine(self):
         # strip comments:
         # first handle round brackets
-        command = re.sub("\([^)]*\)", "", self.line)
+        command = re.sub(r"\([^)]*\)", "", self.line)
         # then semicolons
         idx = command.find(';')
         if idx >= 0:
@@ -42,12 +42,18 @@ class GcodeParser:
 
         # TODO strip logical line number & checksum
 
-        # code is fist word, then args
+        # code is first word, then args
         comm = command.split(None, 1)
         code = comm[0] if (len(comm) > 0) else None
         args = comm[1] if (len(comm) > 1) else None
 
         if code:
+            # Translate 0-padded commands
+            if code[1] == "0" and len(code) > 2:
+                newcode = code[0] + code [2:]
+                print(f"Translated {code} to {newcode}")
+                code = newcode
+
             if hasattr(self, "parse_"+code):
                 getattr(self, "parse_"+code)(args)
             else:
