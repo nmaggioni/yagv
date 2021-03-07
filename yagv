@@ -22,6 +22,7 @@ class App:
         self.TX = 0.0
         self.TY = 0.0
         self.zoom = 1.0
+        self.keyDowns = {}
 
     def main(self):
 
@@ -50,6 +51,7 @@ class App:
         # debug: log all events
         # self.window.push_handlers(pyglet.window.event.WindowEventLogger())
 
+        pyglet.clock.schedule_interval(self.window.on_key_do, 0.075)
         pyglet.app.run()
 
     def reload(self):
@@ -407,21 +409,43 @@ class MyWindow(pyglet.window.Window):
         if button & mouse.MIDDLE:
             self.app.translate_drag_end(x, y, button, modifiers)
 
-    def on_key_release(self, symbol, modifiers):
+    def on_key_press(self, symbol, modifiers):
         print("pressed key: %s, mod: %s" % (symbol, modifiers))
+        if symbol in [pyglet.window.key.UP, pyglet.window.key.DOWN]:
+            if symbol == pyglet.window.key.UP:
+                self.app.layer_up()
+            if symbol == pyglet.window.key.DOWN:
+                self.app.layer_down()
+            self.app.keyDowns[symbol] = time.time()
+        else:
+            print("pressed key: %s, mod: %s"%(symbol, modifiers))
+
+    def on_key_do(self, dt):
+        key_repeat_latency = 0.250 # seconds
+        
+        if pyglet.window.key.UP in self.app.keyDowns:
+            if (time.time() - self.app.keyDowns[pyglet.window.key.UP]) > key_repeat_latency:
+                self.app.layer_up()
+        elif pyglet.window.key.DOWN in self.app.keyDowns:
+            if (time.time() - self.app.keyDowns[pyglet.window.key.DOWN]) > key_repeat_latency:
+                self.app.layer_down()
+
+    def on_key_release(self, symbol, modifiers):
+        print("released key: %s, mod: %s" % (symbol, modifiers))
         # print "pressed key: %s, mod: %s"%(pyglet.window.key.R, pyglet.window.key.MOD_CTRL)
         if symbol == pyglet.window.key.R and modifiers & pyglet.window.key.MOD_CTRL:
             self.app.reload()
-        elif symbol==pyglet.window.key.UP:
-            self.app.layer_up()
-        elif symbol==pyglet.window.key.DOWN:
-            self.app.layer_down()
+        elif symbol in [pyglet.window.key.UP, pyglet.window.key.DOWN]:
+            try:
+                del self.app.keyDowns[symbol]
+            except KeyError:
+                pass
         elif symbol==pyglet.window.key.HOME:
             self.app.layer_bottom()
         elif symbol==pyglet.window.key.END:
             self.app.layer_top()
         else:
-            print("pressed key: %s, mod: %s"%(symbol, modifiers))
+            print("released key: %s, mod: %s"%(symbol, modifiers))
 
     def placeLabels(self, width, height):
         x = 5
