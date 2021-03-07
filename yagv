@@ -45,8 +45,7 @@ class App:
         # default to the middle layer
         self.layerIdx = int(len(self.model.layers)/2)
 
-        self.window = MyWindow(
-            self, caption="Yet Another GCode Viewer v%s" % YAGV_VERSION, resizable=True, width=1500, height=1000)
+        self.window = MyWindow(self, caption="Yet Another GCode Viewer v%s" % YAGV_VERSION,resizable=True, width=1500, height=1000)
 
         # debug: log all events
         # self.window.push_handlers(pyglet.window.event.WindowEventLogger())
@@ -499,11 +498,10 @@ class MyWindow(pyglet.window.Window):
             self.app.model.bbox.dy(),
             self.app.model.bbox.dz()
         )
-        scale = self.app.zoom / max_width
+        scale = (self.app.zoom / max_width) * 3
         glScaled(scale, scale, scale)
 
-        glTranslated(-self.app.model.bbox.cx(), -
-                     self.app.model.bbox.cy(), -self.app.model.bbox.cz())
+        glTranslated(-self.app.model.bbox.cx(), -self.app.model.bbox.cy(), -self.app.model.bbox.cz())
 
         # draw axes
         glBegin(GL_LINES)
