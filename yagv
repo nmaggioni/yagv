@@ -44,7 +44,7 @@ class App:
         self.layerIdx = int(len(self.model.layers)/2)
 
         self.window = MyWindow(
-            self, caption="Yet Another GCode Viewer v%s" % YAGV_VERSION, resizable=True)
+            self, caption="Yet Another GCode Viewer v%s" % YAGV_VERSION, resizable=True, width=1500, height=1000)
 
         # debug: log all events
         # self.window.push_handlers(pyglet.window.event.WindowEventLogger())
