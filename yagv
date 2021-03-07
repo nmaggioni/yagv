@@ -19,6 +19,8 @@ class App:
     def __init__(self):
         self.RX = 0.0
         self.RZ = 0.0
+        self.TX = 0.0
+        self.TY = 0.0
         self.zoom = 1.0
 
     def main(self):
@@ -238,6 +240,26 @@ class App:
         self.rotateDragStartX = None
         self.rotateDragStartY = None
 
+    def translate_drag_start(self, x, y, button, modifiers):
+        self.translateDragStartRX = self.TX
+        self.translateDragStartRY = self.TY
+        self.translateDragStartX = x
+        self.translateDragStartY = y
+
+    def translate_drag_do(self, x, y, dx, dy, buttons, modifiers):
+        # deltas
+        deltaX = x - self.translateDragStartX
+        deltaY = y - self.translateDragStartY
+        # translate!
+        self.TX = self.translateDragStartRX + deltaX / 10.0  # mouse X bound to model Z
+        self.TY = self.translateDragStartRY + deltaY / 10.0  # mouse Y bound to model X
+
+    def translate_drag_end(self, x, y, button, modifiers):
+        self.translateDragStartRX = None
+        self.translateDragStartRY = None
+        self.translateDragStartX = None
+        self.translateDragStartY = None
+
     def layer_drag_start(self, x, y, button, modifiers):
         self.layerDragStartLayer = self.layerIdx
         self.layerDragStartX = x
@@ -310,7 +332,9 @@ class MyWindow(pyglet.window.Window):
             "Ctrl-R to reload file",
             "Right-click & drag (any direction) to change layer",
             "Scroll to zoom",
-            "Left-click & drag to rotate view"]
+            "Left-click & drag to rotate view",
+            "Middle click & drag to translate view",
+        ]
         for txt in self.helpText:
             self.blLabels.append(
                 pyglet.text.Label(	txt,
@@ -359,6 +383,9 @@ class MyWindow(pyglet.window.Window):
         if button & mouse.RIGHT:
             self.app.layer_drag_start(x, y, button, modifiers)
 
+        if button & mouse.MIDDLE:
+            self.app.translate_drag_start(x, y, button, modifiers)
+
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         # print "on_mouse_drag(x=%d, y=%d, dx=%d, dy=%d, buttons=%s, modifiers=%s)"%(x, y, dx, dy, buttons, modifiers)
         if buttons & mouse.LEFT:
@@ -367,6 +394,9 @@ class MyWindow(pyglet.window.Window):
         if buttons & mouse.RIGHT:
             self.app.layer_drag_do(x, y, dx, dy, buttons, modifiers)
 
+        if buttons & mouse.MIDDLE:
+            self.app.translate_drag_do(x, y, dx, dy, buttons, modifiers)
+
     def on_mouse_release(self, x, y, button, modifiers):
         # print "on_mouse_release(x=%d, y=%d, button=%s, modifiers=%s)"%(x, y, button, modifiers)
         if button & mouse.LEFT:
@@ -374,6 +404,9 @@ class MyWindow(pyglet.window.Window):
 
         if button & mouse.RIGHT:
             self.app.layer_drag_end(x, y, button, modifiers)
+
+        if button & mouse.MIDDLE:
+            self.app.translate_drag_end(x, y, button, modifiers)
 
     def on_key_release(self, symbol, modifiers):
         print("pressed key: %s, mod: %s" % (symbol, modifiers))
@@ -455,8 +488,10 @@ class MyWindow(pyglet.window.Window):
         glRotated(-self.app.RX, 1, 0, 0)
         glRotated(self.app.RZ, 0, 0, 1)
 
-        # Todo check this
-        glTranslated(0, 0, -0.5)
+        # translate view
+        tx = self.app.TX
+        ty = self.app.TY
+        glTranslated(tx/10, ty/10, -0.5)
 
         # fit & user zoom model
         max_width = max(
